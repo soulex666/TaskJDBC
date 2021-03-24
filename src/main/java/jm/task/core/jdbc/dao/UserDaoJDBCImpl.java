@@ -17,10 +17,10 @@ public class UserDaoJDBCImpl implements UserDao {
     private static final String CREATE_TABLE =
             "CREATE TABLE users " +
                     "(" +
-                    "    id        INT PRIMARY KEY AUTO_INCREMENT, " +
+                    "    id        BIGINT PRIMARY KEY AUTO_INCREMENT, " +
                     "    name      VARCHAR(100) NOT NULL, " +
                     "    last_name VARCHAR(100) NOT NULL, " +
-                    "    age       INT          NOT NULL " +
+                    "    age       TINYINT          NOT NULL " +
                     ")";
     private static final String SAVE =
             "INSERT INTO users (name, last_name, age) " +
@@ -34,6 +34,7 @@ public class UserDaoJDBCImpl implements UserDao {
         Util util = new Util("config");
         try {
             connection = util.getConnection();
+            connection.setAutoCommit(false);
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -43,16 +44,28 @@ public class UserDaoJDBCImpl implements UserDao {
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate(DROP_TABLE);
             statement.executeUpdate(CREATE_TABLE);
+            connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                connection.rollback();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         }
     }
 
     public void dropUsersTable() {
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate(DROP_TABLE);
+            connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                connection.rollback();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         }
     }
 
@@ -62,8 +75,14 @@ public class UserDaoJDBCImpl implements UserDao {
             preparedStatement.setString(2, lastName);
             preparedStatement.setByte(3, age);
             preparedStatement.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                connection.rollback();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         }
     }
 
@@ -71,8 +90,14 @@ public class UserDaoJDBCImpl implements UserDao {
         try (PreparedStatement preparedStatement = connection.prepareStatement(DELETE_BY_ID)) {
             preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                connection.rollback();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         }
     }
 
@@ -96,9 +121,15 @@ public class UserDaoJDBCImpl implements UserDao {
 
                     entities.add(user);
                 }
+                connection.commit();
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                connection.rollback();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         }
 
         return entities;
@@ -107,8 +138,14 @@ public class UserDaoJDBCImpl implements UserDao {
     public void cleanUsersTable() {
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate(TRUNCATE_TABLE);
+            connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                connection.rollback();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         }
     }
 }
